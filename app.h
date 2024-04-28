@@ -52,15 +52,13 @@ struct Vertex {
 };
 
 struct VCW_PushConstants {
-    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view_proj;
     alignas(8) glm::vec2 res;
     alignas(4) uint32_t time;
 };
 
 struct VCW_Uniform {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
+    alignas(16) glm::mat4 data;
 };
 
 struct VCW_Buffer {
@@ -88,6 +86,7 @@ struct VCW_RenderStats {
     double frame_time;
     double gpu_frame_time;
     double blit_img_time;
+    uint32_t frame_count;
 };
 
 class App {
@@ -149,6 +148,9 @@ private:
     VkQueryPool query_pool;
     uint32_t frame_query_count;
 
+    VCW_PushConstants push_const;
+
+    VCW_Uniform ubo;
     std::vector<VCW_Buffer> unif_bufs;
 
     std::vector<VkSemaphore> img_avl_semps;

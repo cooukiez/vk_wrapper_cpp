@@ -30,12 +30,26 @@ void App::init_app() {
 
     create_cmd_pool();
 
+#ifdef ENABLE_DEPTH_TESTING
     create_depth_resources();
+#endif
+#ifdef BIND_SAMPLE_TEXTURE
     create_tex_img();
+#endif
 
+#ifdef CUBE_DATA
     create_vert_buf(CUBE_VERTICES);
     create_index_buf(CUBE_INDICES);
+#elifdef PLATE_DATA
+    create_vert_buf(PLATE_VERTICES);
+    create_index_buf(PLATE_INDICES);
+#else
+    create_vert_buf(TRIANGLE_VERTICES);
+    create_index_buf(TRIANGLE_INDICES);
+#endif
+#ifdef ENABLE_UNIFORM
     create_unif_bufs();
+#endif
 
 #ifdef INTERMEDIATE_RENDER_TARGET
     create_render_targets();
@@ -145,28 +159,40 @@ void App::create_depth_resources() {
 }
 
 void App::create_desc_pool_layout() {
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    uint32_t last_binding = 0;
+
+#ifdef ENABLE_UNIFORM
     VkDescriptorSetLayoutBinding ubo_layout_binding{};
-    ubo_layout_binding.binding = 0;
+    ubo_layout_binding.binding = last_binding;
     ubo_layout_binding.descriptorCount = 1;
     ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     ubo_layout_binding.pImmutableSamplers = nullptr;
-    ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
+    ubo_layout_binding.stageFlags = UNIFORM_STAGE;
+    bindings.push_back(ubo_layout_binding);
+    last_binding++;
+#endif
+#ifdef BIND_SAMPLE_TEXTURE
     VkDescriptorSetLayoutBinding sampler_layout_binding{};
-    sampler_layout_binding.binding = 1;
+    sampler_layout_binding.binding = last_binding;
     sampler_layout_binding.descriptorCount = 1;
     sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     sampler_layout_binding.pImmutableSamplers = nullptr;
     sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    std::array<VkDescriptorSetLayoutBinding, 2> bindings = {ubo_layout_binding, sampler_layout_binding};
+    bindings.push_back(sampler_layout_binding);
+    last_binding++;
+#endif
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
         add_desc_set_layout(static_cast<uint32_t>(bindings.size()), bindings.data());
     }
 
+#ifdef ENABLE_UNIFORM
     add_pool_size(MAX_FRAMES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+#endif
+#ifdef BIND_SAMPLE_TEXTURE
     add_pool_size(MAX_FRAMES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+#endif
 }
 
 void App::create_pipe() {
@@ -226,6 +252,7 @@ void App::create_pipe() {
     multisample_info.sampleShadingEnable = VK_FALSE;
     multisample_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+#ifdef ENABLE_DEPTH_TESTING
     VkPipelineDepthStencilStateCreateInfo depth_info{};
     depth_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depth_info.depthTestEnable = VK_TRUE;
@@ -233,6 +260,7 @@ void App::create_pipe() {
     depth_info.depthCompareOp = VK_COMPARE_OP_LESS;
     depth_info.depthBoundsTestEnable = VK_FALSE;
     depth_info.stencilTestEnable = VK_FALSE;
+#endif
 
     VkPipelineColorBlendAttachmentState blend_attach{};
     blend_attach.colorWriteMask =
@@ -261,10 +289,12 @@ void App::create_pipe() {
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates = dynamic_states.data();
 
+#ifdef ENABLE_PUSH_CONSTANTS
     VkPushConstantRange push_const_range{};
     push_const_range.stageFlags = PUSH_CONSTANTS_STAGE;
     push_const_range.offset = 0;
     push_const_range.size = sizeof(VCW_PushConstants);
+#endif
 
     VkPipelineLayoutCreateInfo pipe_layout_info{};
     pipe_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -287,7 +317,9 @@ void App::create_pipe() {
     pipe_info.pViewportState = &viewport_info;
     pipe_info.pRasterizationState = &raster_info;
     pipe_info.pMultisampleState = &multisample_info;
+#ifdef ENABLE_DEPTH_TESTING
     pipe_info.pDepthStencilState = &depth_info;
+#endif
     pipe_info.pColorBlendState = &blend_info;
     pipe_info.pDynamicState = &dynamic_state_info;
     pipe_info.layout = pipe_layout;
@@ -304,31 +336,27 @@ void App::create_pipe() {
 
 void App::write_desc_pool() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        write_buf_desc_binding(unif_bufs[i], i, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-        write_img_desc_binding(tex_img, i, 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+        uint32_t last_binding = 0;
+#ifdef ENABLE_UNIFORM
+        write_buf_desc_binding(unif_bufs[i], i, last_binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        last_binding++;
+#endif
+#ifdef BIND_SAMPLE_TEXTURE
+        write_img_desc_binding(tex_img, i, last_binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+#endif
     }
 }
 
-#define NEW
-
 void App::update_bufs(uint32_t index_inflight_frame) {
-    static auto start_time = std::chrono::high_resolution_clock::now();
-
-    auto current_time = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
-
-    VCW_Uniform ubo{};
-
-#ifdef NEW
-    ubo.view = cam.get_view_proj();
-#else
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), swap_extent.width / (float) swap_extent.height, 0.1f, 10.0f);
-    ubo.proj[1][1] *= -1;
+#ifdef ENABLE_PUSH_CONSTANTS
+    push_const.view_proj = cam.get_view_proj();
+    push_const.res = {render_extent.width, render_extent.height};
+    push_const.time = stats.frame_count;
 #endif
-
+#ifdef ENABLE_UNIFORM
+    ubo.data = cam.get_view_proj();
     memcpy(unif_bufs[index_inflight_frame].p_mapped_mem, &ubo, sizeof(ubo));
+#endif
 }
 
 void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
@@ -345,9 +373,15 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
     rendp_begin_info.renderArea.offset = {0, 0};
     rendp_begin_info.renderArea.extent = render_extent;
 
+
+#ifdef ENABLE_DEPTH_TESTING
     std::array<VkClearValue, 2> clear_values{};
     clear_values[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
     clear_values[1].depthStencil = {1.0f, 0};
+#else
+    std::array<VkClearValue, 1> clear_values{};
+    clear_values[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+#endif
 
     rendp_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     rendp_begin_info.pClearValues = clear_values.data();
@@ -381,6 +415,10 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
 
     vkCmdBindDescriptorSets(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe_layout, 0, 1,
                             &desc_sets[cur_frame], 0, nullptr);
+#ifdef ENABLE_PUSH_CONSTANTS
+    vkCmdPushConstants(cmd_buf, pipe_layout, VK_SHADER_STAGE_ALL_GRAPHICS, 0, sizeof(VCW_PushConstants),
+                       &push_const);
+#endif
 
     vkCmdDrawIndexed(cmd_buf, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     vkCmdEndRenderPass(cmd_buf);
@@ -447,6 +485,8 @@ void App::render_loop() {
             cam.speed = CAM_FAST;
         else
             cam.speed = CAM_SLOW;
+
+        stats.frame_count++;
     }
 
     vkDeviceWaitIdle(dev);
@@ -458,10 +498,13 @@ void App::clean_up() {
 
     clean_up_desc();
 
+#ifdef ENABLE_UNIFORM
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         clean_up_buf(unif_bufs[i]);
-
+#endif
+#ifdef BIND_SAMPLE_TEXTURE
     clean_up_img(tex_img);
+#endif
 
     clean_up_buf(vert_buf);
     clean_up_buf(index_buf);

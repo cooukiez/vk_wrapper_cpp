@@ -68,10 +68,10 @@ void App::write_img_desc_binding(VCW_Image img, uint32_t dst_set, uint32_t dst_b
     VkDescriptorImageInfo img_info{};
     img_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     img_info.imageView = img.view;
-    if (img.sampler)
+    if (img.has_sampler)
         img_info.sampler = img.sampler;
 
-    VkWriteDescriptorSet write;
+    VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
     write.dstSet = desc_sets[dst_set];
     write.dstBinding = dst_binding;

@@ -5,6 +5,8 @@
 #include "../app.h"
 
 void App::create_rendp() {
+    std::vector<VkAttachmentDescription> attachments;
+
     VkAttachmentDescription color_attach{};
     color_attach.format = swap_img_format;
     color_attach.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -18,7 +20,9 @@ void App::create_rendp() {
 #else
     color_attach.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 #endif
+    attachments.push_back(color_attach);
 
+#ifdef ENABLE_DEPTH_TESTING
     VkAttachmentDescription depth_attach{};
     depth_attach.format = find_depth_format();
     depth_attach.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -28,32 +32,44 @@ void App::create_rendp() {
     depth_attach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depth_attach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     depth_attach.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    attachments.push_back(depth_attach);
+#endif
 
     VkAttachmentReference color_attach_ref{};
     color_attach_ref.attachment = 0;
     color_attach_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+#ifdef ENABLE_DEPTH_TESTING
     VkAttachmentReference depth_attach_ref{};
     depth_attach_ref.attachment = 1;
     depth_attach_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+#endif
 
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &color_attach_ref;
+#ifdef ENABLE_DEPTH_TESTING
     subpass.pDepthStencilAttachment = &depth_attach_ref;
+#endif
 
     VkSubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
+#ifdef ENABLE_DEPTH_TESTING
     dependency.srcStageMask =
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
     dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependency.dstStageMask =
             VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+#else
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.srcAccessMask = 0;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+#endif
 
-    std::array<VkAttachmentDescription, 2> attachments = {color_attach, depth_attach};
     VkRenderPassCreateInfo rendp_info{};
     rendp_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     rendp_info.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -63,9 +79,8 @@ void App::create_rendp() {
     rendp_info.dependencyCount = 1;
     rendp_info.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(dev, &rendp_info, nullptr, &rendp) != VK_SUCCESS) {
+    if (vkCreateRenderPass(dev, &rendp_info, nullptr, &rendp) != VK_SUCCESS)
         throw std::runtime_error("failed to create render pass.");
-    }
 }
 
 VkShaderModule App::create_shader_mod(const std::vector<char> &code) {
@@ -75,9 +90,8 @@ VkShaderModule App::create_shader_mod(const std::vector<char> &code) {
     mod_info.pCode = reinterpret_cast<const uint32_t *>(code.data());
 
     VkShaderModule mod;
-    if (vkCreateShaderModule(dev, &mod_info, nullptr, &mod) != VK_SUCCESS) {
+    if (vkCreateShaderModule(dev, &mod_info, nullptr, &mod) != VK_SUCCESS)
         throw std::runtime_error("failed to create shader module.");
-    }
 
     return mod;
 }
@@ -87,7 +101,8 @@ void App::create_render_targets() {
 
     for (auto &render_target: render_targets) {
         render_target = create_img(swap_extent, swap_img_format, VK_IMAGE_TILING_OPTIMAL,
-                                   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+                                   VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
         create_img_view(&render_target, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -98,10 +113,10 @@ void App::create_frame_bufs(std::vector<VCW_Image> img_targets) {
     frame_bufs.resize(swap_imgs.size());
 
     for (size_t i = 0; i < swap_imgs.size(); i++) {
-        std::array<VkImageView, 2> attachments = {
-                img_targets[i].view,
-                depth_img.view
-        };
+        std::vector<VkImageView> attachments = {img_targets[i].view};
+#ifdef ENABLE_DEPTH_TESTING
+        attachments.push_back(depth_img.view);
+#endif
 
         VkFramebufferCreateInfo frame_buf_info{};
         frame_buf_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

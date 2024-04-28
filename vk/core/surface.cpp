@@ -127,7 +127,9 @@ void App::recreate_swap() {
     clean_up_swap();
 
     create_swap();
+#ifdef ENABLE_DEPTH_TESTING
     create_depth_resources();
+#endif
 #ifdef INTERMEDIATE_RENDER_TARGET
     create_render_targets();
     create_frame_bufs(render_targets);
@@ -141,7 +143,9 @@ void App::recreate_swap() {
 }
 
 void App::clean_up_swap() {
+#ifdef ENABLE_DEPTH_TESTING
     clean_up_img(depth_img);
+#endif
 
     for (auto framebuffer: frame_bufs)
         vkDestroyFramebuffer(dev, framebuffer, nullptr);

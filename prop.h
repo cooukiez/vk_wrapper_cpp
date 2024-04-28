@@ -16,7 +16,7 @@
 #define ENGINE_NAME "No Engine"
 
 // #define VERBOSE
-#define VALIDATION
+// #define VALIDATION
 
 const std::vector<const char *> val_layers = {
         "VK_LAYER_KHRONOS_validation"
@@ -27,10 +27,14 @@ const std::vector<const char *> dev_exts = {
         // VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME // not required anymore
 };
 
+//
 // scaling resolution
-#define INTERMEDIATE_RENDER_TARGET
+//
+// #define INTERMEDIATE_RENDER_TARGET
 #define RESOLUTION_DIV 4
+//
 // for testing blit vs. copy performance for RESOLUTION_DIV of 1
+//
 // #define TESTING_COPY_INSTEAD_BLIT_IMG
 
 const VkFormat PREFERRED_FORMAT = VK_FORMAT_B8G8R8A8_SRGB;
@@ -54,14 +58,30 @@ const VkBorderColor DEFAULT_SAMPLER_BORDER_COLOR = VK_BORDER_COLOR_INT_OPAQUE_BL
 const VkBool32 DEPTH_CLAMP_ENABLE = VK_FALSE;
 const VkBool32 RASTERIZER_DISCARD_ENABLE = VK_FALSE;
 const VkPolygonMode POLYGON_MODE = VK_POLYGON_MODE_FILL;
-const VkCullModeFlags CULL_MODE = VK_CULL_MODE_NONE;
-const VkFrontFace FRONT_FACE = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+// const VkCullModeFlags CULL_MODE = VK_CULL_MODE_NONE;
+const VkCullModeFlags CULL_MODE = VK_CULL_MODE_BACK_BIT;
+// const VkFrontFace FRONT_FACE = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+const VkFrontFace FRONT_FACE = VK_FRONT_FACE_CLOCKWISE;
 
-#define ENABLE_UNIFORM
-#define ENABLE_PUSH_CONSTANTS
+// #define BIND_SAMPLE_TEXTURE
+// #define ENABLE_DEPTH_TESTING
+
+// #define ENABLE_UNIFORM
+const VkShaderStageFlags UNIFORM_STAGE = VK_SHADER_STAGE_VERTEX_BIT;
+
+// #define ENABLE_PUSH_CONSTANTS
 const VkShaderStageFlags PUSH_CONSTANTS_STAGE = VK_SHADER_STAGE_ALL_GRAPHICS;
 
-#define USE_CAMERA
+//
+// select which vertex set you want to use
+// just comment out the sets you do not want
+// (if none selected default is triangle)
+//
+// #define CUBE_DATA
+// #define PLATE_DATA
+#define TRIANGLE_DATA
+
+// #define USE_CAMERA
 
 //
 // default values for camera
