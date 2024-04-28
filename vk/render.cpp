@@ -82,6 +82,19 @@ void App::create_sync() {
     }
 }
 
+void App::create_query_pool(uint32_t loc_frame_query_count) {
+    VkQueryPoolCreateInfo query_pool_info{};
+    query_pool_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    query_pool_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    query_pool_info.queryCount = loc_frame_query_count * static_cast<uint32_t>(swap_imgs.size());
+
+    if (vkCreateQueryPool(dev, &query_pool_info, nullptr, &query_pool) != VK_SUCCESS)
+        throw std::runtime_error("failed to create query pool.");
+
+    frame_query_count = loc_frame_query_count;
+}
+
+
 void App::render() {
     vkWaitForFences(dev, 1, &fens[cur_frame], VK_TRUE, UINT64_MAX);
 

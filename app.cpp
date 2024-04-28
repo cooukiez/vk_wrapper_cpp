@@ -298,18 +298,6 @@ void App::write_desc_pool() {
     }
 }
 
-void App::create_query_pool(uint32_t loc_frame_query_count) {
-    VkQueryPoolCreateInfo query_pool_info{};
-    query_pool_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-    query_pool_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
-    query_pool_info.queryCount = loc_frame_query_count * static_cast<uint32_t>(swap_imgs.size());
-
-    if (vkCreateQueryPool(dev, &query_pool_info, nullptr, &query_pool) != VK_SUCCESS)
-        throw std::runtime_error("failed to create query pool.");
-
-    frame_query_count = loc_frame_query_count;
-}
-
 #define NEW
 
 void App::update_bufs(uint32_t index_inflight_frame) {
@@ -423,8 +411,8 @@ void App::fetch_queries(uint32_t img_index) {
     if (result == VK_NOT_READY) {
         return;
     } else if (result == VK_SUCCESS) {
-        std::cout << "render time: " << (buffer[1] - buffer[0]) / 10000 << "ms" << std::endl;
-        std::cout << "blit time: " << (buffer[2] - buffer[1]) / 10000 << "ms" << std::endl;
+        stats.gpu_frame_time = (float) (buffer[2] - buffer[0]) * phy_dev_props.limits.timestampPeriod;
+        stats.blit_img_time = (float) (buffer[2] - buffer[1]) * phy_dev_props.limits.timestampPeriod;
     } else {
         throw std::runtime_error("failed to receive query results.");
     }
@@ -466,6 +454,8 @@ void App::clean_up() {
 
     clean_up_buf(vert_buf);
     clean_up_buf(index_buf);
+
+    vkDestroyQueryPool(dev, query_pool, nullptr);
 
     clean_up_sync();
 

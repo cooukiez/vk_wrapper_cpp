@@ -78,6 +78,12 @@ struct VCW_Image {
     VkImageLayout cur_layout;
 };
 
+struct VCW_RenderStats {
+    double frame_time;
+    double gpu_frame_time;
+    double blit_img_time;
+};
+
 class App {
 public:
     void run() {
@@ -142,7 +148,9 @@ private:
     std::vector<VkSemaphore> img_avl_semps;
     std::vector<VkSemaphore> rend_fin_semps;
     std::vector<VkFence> fens;
+
     uint32_t cur_frame = 0;
+    VCW_RenderStats stats;
 
     VCW_Camera cam;
 

@@ -5,8 +5,6 @@
 #ifndef VCW_PROP_H
 #define VCW_PROP_H
 
-// #define VERBOSE
-
 #define WINDOW_TITLE "Vulkan App"
 
 #define INITIAL_WIDTH 800
@@ -17,6 +15,7 @@
 #define APP_NAME "Vulkan App"
 #define ENGINE_NAME "No Engine"
 
+// #define VERBOSE
 #define VALIDATION
 
 const std::vector<const char *> val_layers = {
@@ -30,7 +29,7 @@ const std::vector<const char *> dev_exts = {
 
 // scaling resolution
 #define INTERMEDIATE_RENDER_TARGET
-#define RESOLUTION_DIV 2
+#define RESOLUTION_DIV 4
 // for testing blit vs. copy performance for RESOLUTION_DIV of 1
 // #define TESTING_COPY_INSTEAD_BLIT_IMG
 
@@ -50,6 +49,8 @@ const VkImageSubresourceRange DEFAULT_SUBRESOURCE_RANGE = {.aspectMask = VK_IMAG
 const VkImageSubresourceLayers DEFAULT_SUBRESOURCE_LAYERS = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
 
 const VkBorderColor DEFAULT_SAMPLER_BORDER_COLOR = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+
+#define USE_CAMERA
 
 //
 // default values for camera
