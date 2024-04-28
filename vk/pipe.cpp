@@ -13,7 +13,7 @@ void App::create_rendp() {
     color_attach.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     color_attach.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     color_attach.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-#ifdef RESOLUTION_SCALE
+#ifdef INTERMEDIATE_RENDER_TARGET
     color_attach.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 #else
     color_attach.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;

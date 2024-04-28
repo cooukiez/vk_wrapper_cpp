@@ -134,6 +134,9 @@ private:
     std::vector<uint16_t> indices;
     VCW_Buffer index_buf;
 
+    VkQueryPool query_pool;
+    uint32_t frame_query_count;
+
     std::vector<VCW_Buffer> unif_bufs;
 
     std::vector<VkSemaphore> img_avl_semps;
@@ -256,9 +259,11 @@ private:
 
     static void cp_buf_to_img(VkCommandBuffer cmd_buf, VCW_Buffer buf, VCW_Image img, VkExtent2D extent);
 
-    static void blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent, VkFilter filter);
+    static  void blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent, VkFilter filter);
 
     static void blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst, VkFilter filter);
+
+    static void copy_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst);
 
     void clean_up_img(VCW_Image img);
 
@@ -303,6 +308,8 @@ private:
 
     void create_sync();
 
+    void create_query_pool(uint32_t loc_frame_query_count);
+
     void render();
 
     void clean_up_sync();
@@ -325,11 +332,13 @@ private:
 
     void create_pipe();
 
+    void write_desc_pool();
+
     void update_bufs(uint32_t index_inflight_frame);
 
     void record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index);
 
-    void write_desc_pool();
+    void fetch_queries(uint32_t img_index);
 };
 
 const std::vector<Vertex> PLATE_SAMPLE_VERTICES = {{{-0.5f, -0.5f, 0.0f},  {1.0f, 0.0f}},

@@ -98,7 +98,7 @@ void App::create_sampler(VCW_Image *p_img, VkFilter filter, VkSamplerAddressMode
     sampler_info.addressModeW = address_mode;
     sampler_info.anisotropyEnable = VK_TRUE;
     sampler_info.maxAnisotropy = phy_dev_props.limits.maxSamplerAnisotropy;
-    sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    sampler_info.borderColor = DEFAULT_SAMPLER_BORDER_COLOR;
     sampler_info.unnormalizedCoordinates = VK_FALSE;
     sampler_info.compareEnable = VK_FALSE;
     sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
@@ -189,6 +189,17 @@ void App::blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent
 
 void App::blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst, VkFilter filter) {
     blit_img(cmd_buf, src, src.extent, dst, dst.extent, filter);
+}
+
+void App::copy_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst) {
+    VkImageCopy region{};
+    region.srcSubresource = DEFAULT_SUBRESOURCE_LAYERS;
+    region.srcOffset = {0, 0, 0};
+    region.dstSubresource = DEFAULT_SUBRESOURCE_LAYERS;
+    region.dstOffset = {0, 0, 0};
+    region.extent = src.extent;
+
+    vkCmdCopyImage(cmd_buf, src.img, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst.img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
 void App::clean_up_img(VCW_Image img) {

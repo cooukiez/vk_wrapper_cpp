@@ -15,7 +15,7 @@ VCW_QueueFamilyIndices App::find_qf(VkPhysicalDevice loc_phy_dev) {
 
     int i = 0;
     for (const auto &qf: q_families) {
-        if (qf.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        if (qf.queueFlags & VK_QUEUE_GRAPHICS_BIT && qf.timestampValidBits)
             loc_qf_indices.qf_graph = i;
 
         VkBool32 pres_support = false;

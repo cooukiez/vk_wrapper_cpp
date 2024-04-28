@@ -11,7 +11,7 @@ void App::create_surf() {
 
 VkSurfaceFormatKHR App::choose_surf_format(const std::vector<VkSurfaceFormatKHR> &available) {
     for (const auto &format: available)
-        if (format.format == VK_FORMAT_B8G8R8A8_SRGB && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        if (format.format == PREFERRED_FORMAT && format.colorSpace == PREFERRED_COLOR_SPACE)
             return format;
 
     return available[0];
@@ -66,11 +66,7 @@ void App::create_swap() {
     swap_info.imageColorSpace = surf_format.colorSpace;
     swap_info.imageExtent = extent;
     swap_info.imageArrayLayers = 1;
-#ifdef RESOLUTION_SCALE
-    swap_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-#else
-    swap_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-#endif
+    swap_info.imageUsage = SWAP_IMG_USAGE;
 
     uint32_t families[] = {qf_indices.qf_graph.value(), qf_indices.qf_pres.value()};
 
@@ -83,7 +79,7 @@ void App::create_swap() {
     }
 
     swap_info.preTransform = swap_support.caps.currentTransform;
-    swap_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swap_info.compositeAlpha = PREFERRED_COMPOSITE_ALPHA;
     swap_info.presentMode = pres_mode;
     swap_info.clipped = VK_TRUE;
 
@@ -110,7 +106,7 @@ void App::create_swap() {
     swap_img_format = surf_format.format;
     swap_extent = extent;
 
-#ifdef RESOLUTION_SCALE
+#ifdef INTERMEDIATE_RENDER_TARGET
     render_extent = {extent.width / RESOLUTION_DIV,
                      extent.height / RESOLUTION_DIV};
 #else
@@ -132,7 +128,7 @@ void App::recreate_swap() {
 
     create_swap();
     create_depth_resources();
-#ifdef RESOLUTION_SCALE
+#ifdef INTERMEDIATE_RENDER_TARGET
     create_render_targets();
     create_frame_bufs(render_targets);
 #else
@@ -152,7 +148,7 @@ void App::clean_up_swap() {
         vkDestroyImageView(dev, img.view, nullptr);
     swap_imgs.clear();
 
-#ifdef RESOLUTION_SCALE
+#ifdef INTERMEDIATE_RENDER_TARGET
     for (auto img: render_targets)
         clean_up_img(img);
     render_targets.clear();

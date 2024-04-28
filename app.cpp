@@ -37,7 +37,7 @@ void App::init_app() {
     create_index_buf(CUBE_INDICES);
     create_unif_bufs();
 
-#ifdef RESOLUTION_SCALE
+#ifdef INTERMEDIATE_RENDER_TARGET
     create_render_targets();
     create_frame_bufs(render_targets);
 #else
@@ -48,6 +48,8 @@ void App::init_app() {
 
     create_cmd_bufs();
     create_sync();
+
+    create_query_pool(3);
 
     cam.create_default_cam(render_extent);
 }
@@ -296,6 +298,18 @@ void App::write_desc_pool() {
     }
 }
 
+void App::create_query_pool(uint32_t loc_frame_query_count) {
+    VkQueryPoolCreateInfo query_pool_info{};
+    query_pool_info.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    query_pool_info.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    query_pool_info.queryCount = loc_frame_query_count * static_cast<uint32_t>(swap_imgs.size());
+
+    if (vkCreateQueryPool(dev, &query_pool_info, nullptr, &query_pool) != VK_SUCCESS)
+        throw std::runtime_error("failed to create query pool.");
+
+    frame_query_count = loc_frame_query_count;
+}
+
 #define NEW
 
 void App::update_bufs(uint32_t index_inflight_frame) {
@@ -314,8 +328,6 @@ void App::update_bufs(uint32_t index_inflight_frame) {
     ubo.proj = glm::perspective(glm::radians(45.0f), swap_extent.width / (float) swap_extent.height, 0.1f, 10.0f);
     ubo.proj[1][1] *= -1;
 #endif
-
-    // ubo.view = cam.get_view_proj();
 
     memcpy(unif_bufs[index_inflight_frame].p_mapped_mem, &ubo, sizeof(ubo));
 }
@@ -341,6 +353,9 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
     rendp_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
     rendp_begin_info.pClearValues = clear_values.data();
 
+    vkCmdResetQueryPool(cmd_buf, query_pool, img_index * 3, 3);
+
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, query_pool, img_index * frame_query_count);
     vkCmdBeginRenderPass(cmd_buf, &rendp_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdBindPipeline(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);
@@ -371,7 +386,9 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
     vkCmdDrawIndexed(cmd_buf, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     vkCmdEndRenderPass(cmd_buf);
 
-#ifdef RESOLUTION_SCALE
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, img_index * frame_query_count + 1);
+
+#ifdef INTERMEDIATE_RENDER_TARGET
     // set by renderpass
     render_targets[img_index].cur_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 
@@ -379,15 +396,38 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
     transition_img_layout(cmd_buf, &swap_imgs[img_index], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                           VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
+#ifdef TESTING_COPY_INSTEAD_BLIT_IMG
+    copy_img(cmd_buf, render_targets[img_index], swap_imgs[img_index]);
+#else
     VkExtent3D src_extent = {render_extent.width, render_extent.height, 0};
-    blit_img(cmd_buf, render_targets[img_index], src_extent, swap_imgs[img_index], swap_imgs[img_index].extent, VK_FILTER_LINEAR);
+    blit_img(cmd_buf, render_targets[img_index], src_extent, swap_imgs[img_index], swap_imgs[img_index].extent,
+             VK_FILTER_LINEAR);
+#endif
 
     transition_img_layout(cmd_buf, &swap_imgs[img_index], VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                           VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 #endif
 
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, img_index * frame_query_count + 2);
+
     if (vkEndCommandBuffer(cmd_buf) != VK_SUCCESS)
         throw std::runtime_error("failed to record command buffer.");
+}
+
+void App::fetch_queries(uint32_t img_index) {
+    uint64_t buffer[frame_query_count];
+
+    VkResult result = vkGetQueryPoolResults(dev, query_pool, img_index * frame_query_count, frame_query_count,
+                                            sizeof(uint64_t) * frame_query_count, buffer, sizeof(uint64_t),
+                                            VK_QUERY_RESULT_64_BIT);
+    if (result == VK_NOT_READY) {
+        return;
+    } else if (result == VK_SUCCESS) {
+        std::cout << "render time: " << (buffer[1] - buffer[0]) / 10000 << "ms" << std::endl;
+        std::cout << "blit time: " << (buffer[2] - buffer[1]) / 10000 << "ms" << std::endl;
+    } else {
+        throw std::runtime_error("failed to receive query results.");
+    }
 }
 
 void App::render_loop() {

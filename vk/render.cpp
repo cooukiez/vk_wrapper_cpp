@@ -143,6 +143,8 @@ void App::render() {
         throw std::runtime_error("failed to present swap chain image.");
     }
 
+    fetch_queries(img_index);
+
     cur_frame = (cur_frame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 

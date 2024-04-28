@@ -25,13 +25,31 @@ const std::vector<const char *> val_layers = {
 
 const std::vector<const char *> dev_exts = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        // VK_EXT_HOST_QUERY_RESET_EXTENSION_NAME // not required anymore
 };
 
+// scaling resolution
+#define INTERMEDIATE_RENDER_TARGET
+#define RESOLUTION_DIV 2
+// for testing blit vs. copy performance for RESOLUTION_DIV of 1
+// #define TESTING_COPY_INSTEAD_BLIT_IMG
+
+const VkFormat PREFERRED_FORMAT = VK_FORMAT_B8G8R8A8_SRGB;
+const VkColorSpaceKHR PREFERRED_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 const VkPresentModeKHR PREFERRED_PRES_MODE = VK_PRESENT_MODE_IMMEDIATE_KHR;
+const VkCompositeAlphaFlagBitsKHR PREFERRED_COMPOSITE_ALPHA = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+#ifdef INTERMEDIATE_RENDER_TARGET
+const VkImageUsageFlags SWAP_IMG_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+#else
+const VkImageUsageFlags SWAP_IMG_USAGE = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+#endif
 
 const VkComponentMapping DEFAULT_COMPONENT_MAPPING = {.r = VK_COMPONENT_SWIZZLE_IDENTITY, .g = VK_COMPONENT_SWIZZLE_IDENTITY, .b = VK_COMPONENT_SWIZZLE_IDENTITY, .a = VK_COMPONENT_SWIZZLE_IDENTITY};
 const VkImageSubresourceRange DEFAULT_SUBRESOURCE_RANGE = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1};
 const VkImageSubresourceLayers DEFAULT_SUBRESOURCE_LAYERS = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+
+const VkBorderColor DEFAULT_SAMPLER_BORDER_COLOR = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 
 //
 // default values for camera
@@ -51,7 +69,3 @@ const VkImageSubresourceLayers DEFAULT_SUBRESOURCE_LAYERS = {VK_IMAGE_ASPECT_COL
 #define CAM_FAST 0.1f
 
 #endif //VCW_PROP_H
-
-// scaling resolution
-// #define RESOLUTION_SCALE
-#define RESOLUTION_DIV 2
