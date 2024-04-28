@@ -2,4 +2,12 @@
 Compact Vulkan API wrapper in C++, based of https://vulkan-tutorial.com/ with chapter 27 depth buffering. Wrapper is written with simple class system and supports rotating camera and resolution scaling.
 
 ### ToDo
-- [ ] fix swapchain image formats
+- [x] fix swapchain image formats
+  - it is fixed by just closing MSI Afterburner
+- [x] add precompiler for disabling features
+- [x] add resolution scaling
+  - it works but it is better to just downscale your display resolution
+- [x] add camera rotation
+  - it works but it is better to just rotate your display
+- [ ] maybe at Dear ImGui in the future (maybe)
+- [ ] add compute functionality (maybe)
