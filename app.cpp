@@ -43,6 +43,9 @@ void App::init_app() {
 #elifdef PLATE_DATA
     create_vert_buf(PLATE_VERTICES);
     create_index_buf(PLATE_INDICES);
+#elifdef SCREEN_QUAD_DATA
+    create_vert_buf(SCREEN_QUAD_VERTICES);
+    create_index_buf(SCREEN_QUAD_INDICES);
 #else
     create_vert_buf(TRIANGLE_VERTICES);
     create_index_buf(TRIANGLE_INDICES);

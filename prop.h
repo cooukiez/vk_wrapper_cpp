@@ -79,7 +79,7 @@ const VkShaderStageFlags PUSH_CONSTANTS_STAGE = VK_SHADER_STAGE_ALL_GRAPHICS;
 //
 // #define CUBE_DATA
 // #define PLATE_DATA
-#define TRIANGLE_DATA
+#define SCREEN_QUAD_DATA
 
 // #define USE_CAMERA
 
