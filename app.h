@@ -98,10 +98,10 @@ public:
         clean_up();
     }
 
-private:
     GLFWwindow *window;
     bool resized = false;
     glm::vec2 cursor_pos;
+    bool cursor_enabled = false;
 
     VkInstance inst;
     VkDebugUtilsMessengerEXT debug_msg;
@@ -159,6 +159,7 @@ private:
 
     uint32_t cur_frame = 0;
     VCW_RenderStats stats;
+    VCW_RenderStats readable_stats;
 
     VCW_Camera cam;
 
@@ -185,13 +186,15 @@ private:
     void init_window();
 
     //
-    // vulkan instance
+    // vulkan / imgui instance
     //
     static std::vector<const char *> get_required_exts();
 
     void create_inst();
 
     void setup_debug_msg();
+
+    void init_imgui();
 
     //
     //
@@ -275,7 +278,9 @@ private:
 
     static void cp_buf_to_img(VkCommandBuffer cmd_buf, VCW_Buffer buf, VCW_Image img, VkExtent2D extent);
 
-    static  void blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent, VkFilter filter);
+    static void
+    blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent,
+             VkFilter filter);
 
     static void blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst, VkFilter filter);
 

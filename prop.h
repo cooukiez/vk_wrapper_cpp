@@ -16,7 +16,7 @@
 #define ENGINE_NAME "No Engine"
 
 // #define VERBOSE
-// #define VALIDATION
+#define VALIDATION
 
 const std::vector<const char *> val_layers = {
         "VK_LAYER_KHRONOS_validation"
@@ -31,7 +31,7 @@ const std::vector<const char *> dev_exts = {
 // scaling resolution
 //
 // #define INTERMEDIATE_RENDER_TARGET
-#define RESOLUTION_DIV 4
+#define RESOLUTION_DIV 3
 //
 // for testing blit vs. copy performance for RESOLUTION_DIV of 1
 //
@@ -69,7 +69,7 @@ const VkFrontFace FRONT_FACE = VK_FRONT_FACE_CLOCKWISE;
 // #define ENABLE_UNIFORM
 const VkShaderStageFlags UNIFORM_STAGE = VK_SHADER_STAGE_VERTEX_BIT;
 
-// #define ENABLE_PUSH_CONSTANTS
+#define ENABLE_PUSH_CONSTANTS
 const VkShaderStageFlags PUSH_CONSTANTS_STAGE = VK_SHADER_STAGE_ALL_GRAPHICS;
 
 //
@@ -77,11 +77,14 @@ const VkShaderStageFlags PUSH_CONSTANTS_STAGE = VK_SHADER_STAGE_ALL_GRAPHICS;
 // just comment out the sets you do not want
 // (if none selected default is triangle)
 //
-// #define CUBE_DATA
+#define CUBE_DATA
 // #define PLATE_DATA
-#define SCREEN_QUAD_DATA
+// #define SCREEN_QUAD_DATA
 
-// #define USE_CAMERA
+#define IMPL_IMGUI
+#define IMGUI_DESCRIPTOR_COUNT 1
+
+#define USE_CAMERA
 
 //
 // default values for camera

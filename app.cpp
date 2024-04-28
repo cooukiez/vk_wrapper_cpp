@@ -60,11 +60,19 @@ void App::init_app() {
 #else
     create_frame_bufs(swap_imgs);
 #endif
+#ifdef IMPL_IMGUI
+    create_desc_pool(MAX_FRAMES_IN_FLIGHT + IMGUI_DESCRIPTOR_COUNT);
+#else
     create_desc_pool(MAX_FRAMES_IN_FLIGHT);
+#endif
     write_desc_pool();
 
     create_cmd_bufs();
     create_sync();
+
+#ifdef IMPL_IMGUI
+    init_imgui();
+#endif
 
     create_query_pool(3);
 
@@ -193,9 +201,14 @@ void App::create_desc_pool_layout() {
 #ifdef ENABLE_UNIFORM
     add_pool_size(MAX_FRAMES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 #endif
+    uint32_t combined_img_samplers = 0;
 #ifdef BIND_SAMPLE_TEXTURE
-    add_pool_size(MAX_FRAMES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+    combined_img_samplers += MAX_FRAMES_IN_FLIGHT;
 #endif
+#ifdef IMPL_IMGUI
+    combined_img_samplers += IMGUI_DESCRIPTOR_COUNT;
+#endif
+    add_pool_size(combined_img_samplers, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 }
 
 void App::create_pipe() {
@@ -424,6 +437,12 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
 #endif
 
     vkCmdDrawIndexed(cmd_buf, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+#ifdef IMPL_IMGUI
+    ImGui::Render();
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd_buf);
+#endif
+
     vkCmdEndRenderPass(cmd_buf);
 
     vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, img_index * frame_query_count + 1);
@@ -463,17 +482,49 @@ void App::fetch_queries(uint32_t img_index) {
     if (result == VK_NOT_READY) {
         return;
     } else if (result == VK_SUCCESS) {
-        stats.gpu_frame_time = (float) (buffer[2] - buffer[0]) * phy_dev_props.limits.timestampPeriod;
-        stats.blit_img_time = (float) (buffer[2] - buffer[1]) * phy_dev_props.limits.timestampPeriod;
+        stats.gpu_frame_time = (float) (buffer[2] - buffer[0]) / phy_dev_props.limits.timestampPeriod / 1000.0;
+        stats.blit_img_time = (float) (buffer[2] - buffer[1]) / phy_dev_props.limits.timestampPeriod / 1000.0;
     } else {
         throw std::runtime_error("failed to receive query results.");
     }
 }
 
 void App::render_loop() {
+    auto last_frame_checkpoint = std::chrono::high_resolution_clock::now();
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+#ifdef IMPL_IMGUI
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Frame Info");
+        ImGui::SetWindowSize(ImVec2(30, 30), ImGuiCond_FirstUseEver);
+        ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+
+        char buffer[100];
+        snprintf(buffer, sizeof(buffer), "frame time: %fms", readable_stats.frame_time);
+        ImGui::Text(buffer);
+        snprintf(buffer, sizeof(buffer), "gpu frame time: %fms", readable_stats.gpu_frame_time);
+        ImGui::Text(buffer);
+        snprintf(buffer, sizeof(buffer), "blit img time: %fms", readable_stats.blit_img_time);
+        ImGui::Text(buffer);
+        snprintf(buffer, sizeof(buffer), "camera position: %f, %f, %f", cam.pos.x, cam.pos.y, cam.pos.z);
+        ImGui::Text(buffer);
+        snprintf(buffer, sizeof(buffer), "timestamp period: %f", phy_dev_props.limits.timestampPeriod);
+        ImGui::Text(buffer);
+
+        ImGui::End();
+#endif
+
+        auto start_time = std::chrono::high_resolution_clock::now();
         render();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto render_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+        stats.frame_time += (float) render_duration.count() / 1000.0f;
+        stats.frame_time /= 2.0f;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             cam.pos += cam.mov_lin;
@@ -490,6 +541,17 @@ void App::render_loop() {
             cam.speed = CAM_SLOW;
 
         stats.frame_count++;
+
+        auto current_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(current_time - last_frame_checkpoint);
+
+        if (duration.count() >= 1) {
+            readable_stats.frame_time = stats.frame_time;
+            readable_stats.gpu_frame_time = stats.gpu_frame_time;
+            readable_stats.blit_img_time = stats.blit_img_time;
+
+            last_frame_checkpoint = std::chrono::high_resolution_clock::now();
+        }
     }
 
     vkDeviceWaitIdle(dev);

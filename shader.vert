@@ -1,7 +1,7 @@
 #version 450
 
 // #define USE_UNIFORM
-// #define USE_PUSH_CONSTANTS
+#define USE_PUSH_CONSTANTS
 
 #ifdef USE_PUSH_CONSTANTS
 layout (push_constant) uniform PushConstants {

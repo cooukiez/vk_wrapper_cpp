@@ -140,6 +140,8 @@ void App::recreate_swap() {
 #ifdef USE_CAMERA
     cam.update_proj(render_extent);
 #endif
+
+    ImGui_ImplVulkan_SetMinImageCount(static_cast<uint32_t>(swap_imgs.size()));
 }
 
 void App::clean_up_swap() {

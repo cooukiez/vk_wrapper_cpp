@@ -4,7 +4,6 @@
 
 #include "../app.h"
 
-
 void App::add_desc_set_layout(uint32_t binding_count, VkDescriptorSetLayoutBinding *p_bindings) {
     VkDescriptorSetLayoutCreateInfo desc_set_layout_info{};
     desc_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -30,6 +29,7 @@ void App::create_desc_pool(uint32_t max_sets) {
     pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     pool_info.poolSizeCount = static_cast<uint32_t>(desc_pool_sizes.size());
     pool_info.pPoolSizes = desc_pool_sizes.data();
+    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     pool_info.maxSets = max_sets;
 
     if (vkCreateDescriptorPool(dev, &pool_info, nullptr, &desc_pool) != VK_SUCCESS)
