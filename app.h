@@ -112,6 +112,7 @@ public:
     VkPhysicalDeviceMemoryProperties phy_dev_mem_props;
     VkPhysicalDeviceProperties phy_dev_props;
 
+    std::vector<VkQueueFamilyProperties> qf_props;
     VCW_QueueFamilyIndices qf_indices;
     VkDevice dev;
     VkQueue q_graph;
@@ -205,8 +206,10 @@ public:
     void create_surf();
 
     //
-    // physical device
+    // phstatic ysical device
     //
+    std::vector<VkQueueFamilyProperties> get_qf_props(VkPhysicalDevice loc_phy_dev);
+
     VCW_QueueFamilyIndices find_qf(VkPhysicalDevice loc_phy_dev);
 
     static bool check_phy_dev_ext_support(VkPhysicalDevice loc_phy_dev);

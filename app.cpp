@@ -445,7 +445,7 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
 
     vkCmdEndRenderPass(cmd_buf);
 
-    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, query_pool, img_index * frame_query_count + 1);
+    vkCmdWriteTimestamp(cmd_buf, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, query_pool, img_index * frame_query_count + 1);
 
 #ifdef INTERMEDIATE_RENDER_TARGET
     // set by renderpass
@@ -474,16 +474,16 @@ void App::record_cmd_buf(VkCommandBuffer cmd_buf, uint32_t img_index) {
 }
 
 void App::fetch_queries(uint32_t img_index) {
-    uint64_t buffer[frame_query_count];
+    std::vector<uint64_t> buffer(frame_query_count);
 
     VkResult result = vkGetQueryPoolResults(dev, query_pool, img_index * frame_query_count, frame_query_count,
-                                            sizeof(uint64_t) * frame_query_count, buffer, sizeof(uint64_t),
+                                            sizeof(uint64_t) * frame_query_count, buffer.data(), sizeof(uint64_t),
                                             VK_QUERY_RESULT_64_BIT);
     if (result == VK_NOT_READY) {
         return;
     } else if (result == VK_SUCCESS) {
-        stats.gpu_frame_time = (float) (buffer[2] - buffer[0]) / phy_dev_props.limits.timestampPeriod / 1000.0;
-        stats.blit_img_time = (float) (buffer[2] - buffer[1]) / phy_dev_props.limits.timestampPeriod / 1000.0;
+        stats.gpu_frame_time = (float) (buffer[2] - buffer[0]) * phy_dev_props.limits.timestampPeriod / 1000000.0f;
+        stats.blit_img_time = (float) (buffer[2] - buffer[1]) * phy_dev_props.limits.timestampPeriod / 1000000.0f;
     } else {
         throw std::runtime_error("failed to receive query results.");
     }

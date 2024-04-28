@@ -4,17 +4,23 @@
 
 #include "../../app.h"
 
-VCW_QueueFamilyIndices App::find_qf(VkPhysicalDevice loc_phy_dev) {
-    VCW_QueueFamilyIndices loc_qf_indices;
-
+std::vector<VkQueueFamilyProperties> App::get_qf_props(VkPhysicalDevice loc_phy_dev) {
     uint32_t qf_count = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(loc_phy_dev, &qf_count, nullptr);
 
-    std::vector<VkQueueFamilyProperties> q_families(qf_count);
-    vkGetPhysicalDeviceQueueFamilyProperties(loc_phy_dev, &qf_count, q_families.data());
+    std::vector<VkQueueFamilyProperties> loc_qf_props(qf_count);
+    vkGetPhysicalDeviceQueueFamilyProperties(loc_phy_dev, &qf_count, loc_qf_props.data());
+
+    return loc_qf_props;
+}
+
+VCW_QueueFamilyIndices App::find_qf(VkPhysicalDevice loc_phy_dev) {
+    VCW_QueueFamilyIndices loc_qf_indices;
+
+    std::vector<VkQueueFamilyProperties> loc_qf_props = get_qf_props(loc_phy_dev);
 
     int i = 0;
-    for (const auto &qf: q_families) {
+    for (const auto &qf: loc_qf_props) {
         if (qf.queueFlags & VK_QUEUE_GRAPHICS_BIT && qf.timestampValidBits)
             loc_qf_indices.qf_graph = i;
 
@@ -153,6 +159,7 @@ void App::create_dev() {
     if (vkCreateDevice(phy_dev, &dev_info, nullptr, &dev) != VK_SUCCESS)
         throw std::runtime_error("failed to create logical device.");
 
+    qf_props = get_qf_props(phy_dev);
     vkGetDeviceQueue(dev, qf_indices.qf_graph.value(), 0, &q_graph);
     vkGetDeviceQueue(dev, qf_indices.qf_pres.value(), 0, &q_pres);
 }

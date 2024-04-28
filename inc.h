@@ -26,6 +26,7 @@
 #include <optional>
 #include <set>
 #include <sstream>
+#include <functional>
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
