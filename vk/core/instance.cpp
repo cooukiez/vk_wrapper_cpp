@@ -12,8 +12,10 @@ void App::frame_buf_resized(GLFWwindow *window, int width, int height) {
 void App::cursor_callback(GLFWwindow *window, double nx, double ny) {
     auto app = reinterpret_cast<App *>(glfwGetWindowUserPointer(window));
     glm::vec2 new_pos = {nx, ny};
+#ifdef USE_CAMERA
     glm::vec2 delta = new_pos - app->cursor_pos;
     app->cam.update_cam_rotation(delta.x, delta.y);
+#endif
     app->cursor_pos = new_pos;
 }
 

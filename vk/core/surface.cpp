@@ -135,7 +135,9 @@ void App::recreate_swap() {
     create_frame_bufs(swap_imgs);
 #endif
 
+#ifdef USE_CAMERA
     cam.update_proj(render_extent);
+#endif
 }
 
 void App::clean_up_swap() {
@@ -153,8 +155,6 @@ void App::clean_up_swap() {
         clean_up_img(img);
     render_targets.clear();
 #endif
-
-
 
     vkDestroySwapchainKHR(dev, swap, nullptr);
 }

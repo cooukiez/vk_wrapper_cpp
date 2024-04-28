@@ -51,6 +51,12 @@ struct Vertex {
     static std::array<VkVertexInputAttributeDescription, 2> get_attrib_descs();
 };
 
+struct VCW_PushConstants {
+    alignas(16) glm::mat4 model;
+    alignas(8) glm::vec2 res;
+    alignas(4) uint32_t time;
+};
+
 struct VCW_Uniform {
     alignas(16) glm::mat4 model;
     alignas(16) glm::mat4 view;

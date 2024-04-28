@@ -51,7 +51,9 @@ void App::init_app() {
 
     create_query_pool(3);
 
+#ifdef USE_CAMERA
     cam.create_default_cam(render_extent);
+#endif
 }
 
 void App::create_vert_buf(const std::vector<Vertex> &vertices_dataset) {
@@ -211,12 +213,12 @@ void App::create_pipe() {
 
     VkPipelineRasterizationStateCreateInfo raster_info{};
     raster_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-    raster_info.depthClampEnable = VK_FALSE;
-    raster_info.rasterizerDiscardEnable = VK_FALSE;
-    raster_info.polygonMode = VK_POLYGON_MODE_FILL;
+    raster_info.depthClampEnable = DEPTH_CLAMP_ENABLE;
+    raster_info.rasterizerDiscardEnable = RASTERIZER_DISCARD_ENABLE;
+    raster_info.polygonMode = POLYGON_MODE;
     raster_info.lineWidth = 1.0f;
-    raster_info.cullMode = VK_CULL_MODE_NONE;
-    raster_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    raster_info.cullMode = CULL_MODE;
+    raster_info.frontFace = FRONT_FACE;
     raster_info.depthBiasEnable = VK_FALSE;
 
     VkPipelineMultisampleStateCreateInfo multisample_info{};
@@ -259,32 +261,41 @@ void App::create_pipe() {
     dynamic_state_info.dynamicStateCount = static_cast<uint32_t>(dynamic_states.size());
     dynamic_state_info.pDynamicStates = dynamic_states.data();
 
+    VkPushConstantRange push_const_range{};
+    push_const_range.stageFlags = PUSH_CONSTANTS_STAGE;
+    push_const_range.offset = 0;
+    push_const_range.size = sizeof(VCW_PushConstants);
+
     VkPipelineLayoutCreateInfo pipe_layout_info{};
     pipe_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipe_layout_info.setLayoutCount = desc_set_layouts.size();
     pipe_layout_info.pSetLayouts = desc_set_layouts.data();
+#ifdef ENABLE_PUSH_CONSTANTS
+    pipe_layout_info.pushConstantRangeCount = 1;
+    pipe_layout_info.pPushConstantRanges = &push_const_range;
+#endif
 
     if (vkCreatePipelineLayout(dev, &pipe_layout_info, nullptr, &pipe_layout) != VK_SUCCESS)
         throw std::runtime_error("failed to create pipeline layout.");
 
-    VkGraphicsPipelineCreateInfo pipelineInfo{};
-    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    pipelineInfo.stageCount = 2;
-    pipelineInfo.pStages = stages;
-    pipelineInfo.pVertexInputState = &vert_input_info;
-    pipelineInfo.pInputAssemblyState = &input_asm_info;
-    pipelineInfo.pViewportState = &viewport_info;
-    pipelineInfo.pRasterizationState = &raster_info;
-    pipelineInfo.pMultisampleState = &multisample_info;
-    pipelineInfo.pDepthStencilState = &depth_info;
-    pipelineInfo.pColorBlendState = &blend_info;
-    pipelineInfo.pDynamicState = &dynamic_state_info;
-    pipelineInfo.layout = pipe_layout;
-    pipelineInfo.renderPass = rendp;
-    pipelineInfo.subpass = 0;
-    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+    VkGraphicsPipelineCreateInfo pipe_info{};
+    pipe_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pipe_info.stageCount = 2;
+    pipe_info.pStages = stages;
+    pipe_info.pVertexInputState = &vert_input_info;
+    pipe_info.pInputAssemblyState = &input_asm_info;
+    pipe_info.pViewportState = &viewport_info;
+    pipe_info.pRasterizationState = &raster_info;
+    pipe_info.pMultisampleState = &multisample_info;
+    pipe_info.pDepthStencilState = &depth_info;
+    pipe_info.pColorBlendState = &blend_info;
+    pipe_info.pDynamicState = &dynamic_state_info;
+    pipe_info.layout = pipe_layout;
+    pipe_info.renderPass = rendp;
+    pipe_info.subpass = 0;
+    pipe_info.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipe) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipe_info, nullptr, &pipe) != VK_SUCCESS)
         throw std::runtime_error("failed to create graphics pipeline.");
 
     vkDestroyShaderModule(dev, frag_module, nullptr);
