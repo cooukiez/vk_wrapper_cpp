@@ -109,30 +109,6 @@ void App::setup_debug_msg() {
 }
 
 void App::init_imgui() {
-    // create desc pool for imgui
-    std::array<VkDescriptorPoolSize, 11> pool_sizes = {{{VK_DESCRIPTOR_TYPE_SAMPLER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000},
-                                                        {VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000}}};
-
-    VkDescriptorPoolCreateInfo desc_pool_info = {};
-    desc_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    desc_pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    desc_pool_info.maxSets = 1000;
-    desc_pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-    desc_pool_info.pPoolSizes = pool_sizes.data();
-
-    VkDescriptorPool imgui_desc_pool;
-    if (vkCreateDescriptorPool(dev, &desc_pool_info, nullptr, &imgui_desc_pool) != VK_SUCCESS)
-        throw std::runtime_error("failed to create imgui descriptor pool.");
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -156,8 +132,5 @@ void App::init_imgui() {
     imgui_init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&imgui_init_info);
 
-    VkCommandBuffer cmd_buf = begin_single_time_cmd();
-    ImGui_ImplVulkan_CreateFontsTexture(cmd_buf);
-    end_single_time_cmd(cmd_buf);
-    ImGui_ImplVulkan_DestroyFontsTexture();
+    ImGui_ImplVulkan_CreateFontsTexture();
 }

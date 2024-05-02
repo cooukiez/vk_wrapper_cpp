@@ -12,5 +12,6 @@ Compact Vulkan API wrapper in C++, based of https://vulkan-tutorial.com/ with ch
 - [x] basic movement
 - [x] add screen quad vertices
 - [x] fix winding order of cube vertices
-- [ ] maybe at Dear ImGui in the future (maybe)
+- [x] maybe at Dear ImGui in the future (maybe)
+- [ ] fix winding order of cube vertices (so that back culling works)
 - [ ] add compute functionality (maybe)

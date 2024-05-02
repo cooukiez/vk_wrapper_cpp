@@ -559,8 +559,12 @@ void App::render_loop() {
 
 void App::clean_up() {
     clean_up_swap();
-    clean_up_pipe();
 
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    clean_up_pipe();
     clean_up_desc();
 
 #ifdef ENABLE_UNIFORM

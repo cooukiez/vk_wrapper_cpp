@@ -27,7 +27,7 @@ target_link_libraries(main Vulkan::Vulkan)
 target_link_libraries(main glfw)
 target_link_libraries(main glm::glm)
 
-target_include_directories(main ${Stb_INCLUDE_DIR})
+target_include_directories(main PRIVATE ${Stb_INCLUDE_DIR})
 
 target_sources(main PRIVATE
         ${IMGUI_DIR}/imgui.cpp
@@ -40,7 +40,13 @@ target_sources(main PRIVATE
 
 target_include_directories(main PRIVATE ${IMGUI_DIR})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    message(STATUS "Detected MinGW compiler.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    message(STATUS "Detected MSVC compiler.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od")
+endif()
 
 add_custom_target(vert.spv
         COMMAND glslangValidator --quiet -V ${CMAKE_SOURCE_DIR}/shader.vert -o ${CMAKE_BINARY_DIR}/vert.spv)
