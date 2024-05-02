@@ -16,7 +16,7 @@
 #define ENGINE_NAME "No Engine"
 
 // #define VERBOSE
-#define VALIDATION
+// #define VALIDATION
 
 const std::vector<const char *> val_layers = {
         "VK_LAYER_KHRONOS_validation"

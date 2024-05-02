@@ -40,10 +40,10 @@ void App::init_app() {
 #ifdef CUBE_DATA
     create_vert_buf(CUBE_VERTICES);
     create_index_buf(CUBE_INDICES);
-#elifdef PLATE_DATA
+#elif defined(PLATE_DATA)
     create_vert_buf(PLATE_VERTICES);
     create_index_buf(PLATE_INDICES);
-#elifdef SCREEN_QUAD_DATA
+#elif defined(SCREEN_QUAD_DATA)
     create_vert_buf(SCREEN_QUAD_VERTICES);
     create_index_buf(SCREEN_QUAD_INDICES);
 #else
@@ -314,7 +314,7 @@ void App::create_pipe() {
 
     VkPipelineLayoutCreateInfo pipe_layout_info{};
     pipe_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipe_layout_info.setLayoutCount = desc_set_layouts.size();
+    pipe_layout_info.setLayoutCount = static_cast<uint32_t>(desc_set_layouts.size());
     pipe_layout_info.pSetLayouts = desc_set_layouts.data();
 #ifdef ENABLE_PUSH_CONSTANTS
     pipe_layout_info.pushConstantRangeCount = 1;
