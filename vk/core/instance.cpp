@@ -30,6 +30,20 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         app->cursor_enabled = false;
         glfwSetCursorPos(window, app->cursor_pos.x, app->cursor_pos.y);
+    } else if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
+        if (glfwGetWindowMonitor(window) == nullptr) {
+            glfwGetWindowPos(window, &app->window_pos.x, &app->window_pos.y);
+            glfwGetWindowSize(window, &app->window_dim.x, &app->window_dim.y);
+
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            int actual_width = mode->width / FULLSCREEN_RES_DIV;
+            int actual_height = mode->height / FULLSCREEN_RES_DIV;
+
+            glfwSetWindowMonitor(window, monitor, 0, 0, actual_width, actual_height, mode->refreshRate);
+        } else {
+            glfwSetWindowMonitor(window, nullptr, app->window_pos.x, app->window_pos.y, app->window_dim.x, app->window_dim.y, GLFW_DONT_CARE);
+        }
     }
 }
 
@@ -114,7 +128,11 @@ void App::init_imgui() {
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
     ImGui::StyleColorsDark();
+#ifdef IMGUI_SCALE_OVERLAY
     ImGui::GetIO().FontGlobalScale = 2.0f;
+#else
+    ImGui::GetIO().FontGlobalScale = 1.0f;
+#endif
 
     ImGui_ImplGlfw_InitForVulkan(window, true);
 

@@ -107,8 +107,8 @@ void App::create_swap() {
     swap_extent = extent;
 
 #ifdef INTERMEDIATE_RENDER_TARGET
-    render_extent = {extent.width / RESOLUTION_DIV,
-                     extent.height / RESOLUTION_DIV};
+    render_extent = {extent.width / RENDER_TARGET_RES_DIV,
+                     extent.height / RENDER_TARGET_RES_DIV};
 #else
     render_extent = swap_extent;
 #endif

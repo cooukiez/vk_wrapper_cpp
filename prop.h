@@ -31,15 +31,17 @@ const std::vector<const char *> dev_exts = {
 // scaling resolution
 //
 // #define INTERMEDIATE_RENDER_TARGET
-#define RESOLUTION_DIV 3
+// #define RENDER_TARGET_RES_DIV 3
+#define FULLSCREEN_RES_DIV 1
+// #define IMGUI_SCALE_OVERLAY
 //
-// for testing blit vs. copy performance for RESOLUTION_DIV of 1
+// for testing blit vs. copy performance for RENDER_TARGET_RES_DIV of 1
 //
 // #define TESTING_COPY_INSTEAD_BLIT_IMG
 
 const VkFormat PREFERRED_FORMAT = VK_FORMAT_B8G8R8A8_SRGB;
 const VkColorSpaceKHR PREFERRED_COLOR_SPACE = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-const VkPresentModeKHR PREFERRED_PRES_MODE = VK_PRESENT_MODE_IMMEDIATE_KHR;
+const VkPresentModeKHR PREFERRED_PRES_MODE = VK_PRESENT_MODE_FIFO_KHR;
 const VkCompositeAlphaFlagBitsKHR PREFERRED_COMPOSITE_ALPHA = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 
 #ifdef INTERMEDIATE_RENDER_TARGET
@@ -64,7 +66,7 @@ const VkCullModeFlags CULL_MODE = VK_CULL_MODE_BACK_BIT;
 const VkFrontFace FRONT_FACE = VK_FRONT_FACE_CLOCKWISE;
 
 // #define BIND_SAMPLE_TEXTURE
-// #define ENABLE_DEPTH_TESTING
+#define ENABLE_DEPTH_TESTING
 
 // #define ENABLE_UNIFORM
 const VkShaderStageFlags UNIFORM_STAGE = VK_SHADER_STAGE_VERTEX_BIT;

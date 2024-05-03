@@ -102,6 +102,8 @@ public:
     bool resized = false;
     glm::vec2 cursor_pos;
     bool cursor_enabled = false;
+    glm::ivec2 window_dim;
+    glm::ivec2 window_pos;
 
     VkInstance inst;
     VkDebugUtilsMessengerEXT debug_msg;

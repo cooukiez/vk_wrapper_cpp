@@ -500,7 +500,7 @@ void App::render_loop() {
         ImGui::NewFrame();
 
         ImGui::Begin("Frame Info");
-        ImGui::SetWindowSize(ImVec2(30, 30), ImGuiCond_FirstUseEver);
+        ImGui::SetWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
         ImGui::SetWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver);
 
         char buffer[100];

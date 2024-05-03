@@ -45,7 +45,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     message(STATUS "Detected MSVC compiler.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
 endif()
 
 add_custom_target(vert.spv
