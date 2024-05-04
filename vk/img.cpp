@@ -10,9 +10,8 @@ VkFormat App::find_supported_format(const std::vector<VkFormat> &possible_format
         VkFormatProperties props;
         vkGetPhysicalDeviceFormatProperties(phy_dev, format, &props);
 
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
-            return format;
-        } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+        if ((tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) ||
+            (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)) {
             return format;
         }
     }
@@ -174,7 +173,8 @@ void App::cp_buf_to_img(VkCommandBuffer cmd_buf, VCW_Buffer buf, VCW_Image img, 
     vkCmdCopyBufferToImage(cmd_buf, buf.buf, img.img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-void App::blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent, VkFilter filter) {
+void App::blit_img(VkCommandBuffer cmd_buf, VCW_Image src, VkExtent3D src_extent, VCW_Image dst, VkExtent3D dst_extent,
+                   VkFilter filter) {
     VkImageBlit region{};
     region.srcSubresource = DEFAULT_SUBRESOURCE_LAYERS;
     region.srcOffsets[0] = {0, 0, 0};
@@ -199,7 +199,8 @@ void App::copy_img(VkCommandBuffer cmd_buf, VCW_Image src, VCW_Image dst) {
     region.dstOffset = {0, 0, 0};
     region.extent = src.extent;
 
-    vkCmdCopyImage(cmd_buf, src.img, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst.img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    vkCmdCopyImage(cmd_buf, src.img, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst.img,
+                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
 void App::clean_up_img(VCW_Image img) {

@@ -100,7 +100,7 @@ public:
 
     GLFWwindow *window;
     bool resized = false;
-    glm::vec2 cursor_pos;
+    glm::vec2 mouse_pos;
     bool cursor_enabled = false;
     glm::ivec2 window_dim;
     glm::ivec2 window_pos;
@@ -208,9 +208,9 @@ public:
     void create_surf();
 
     //
-    // phstatic ysical device
+    // physical device
     //
-    std::vector<VkQueueFamilyProperties> get_qf_props(VkPhysicalDevice loc_phy_dev);
+    static std::vector<VkQueueFamilyProperties> get_qf_props(VkPhysicalDevice loc_phy_dev);
 
     VCW_QueueFamilyIndices find_qf(VkPhysicalDevice loc_phy_dev);
 

@@ -14,11 +14,11 @@ void App::cursor_callback(GLFWwindow *window, double nx, double ny) {
     glm::vec2 new_pos = {nx, ny};
 #ifdef USE_CAMERA
     if (!app->cursor_enabled) {
-        glm::vec2 delta = new_pos - app->cursor_pos;
+        glm::vec2 delta = new_pos - app->mouse_pos;
         app->cam.update_cam_rotation(delta.x, delta.y);
     }
 #endif
-    app->cursor_pos = new_pos;
+    app->mouse_pos = new_pos;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -29,7 +29,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     } else if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         app->cursor_enabled = false;
-        glfwSetCursorPos(window, app->cursor_pos.x, app->cursor_pos.y);
+        glfwSetCursorPos(window, app->mouse_pos.x, app->mouse_pos.y);
     } else if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
         if (glfwGetWindowMonitor(window) == nullptr) {
             glfwGetWindowPos(window, &app->window_pos.x, &app->window_pos.y);

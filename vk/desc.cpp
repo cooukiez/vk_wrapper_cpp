@@ -85,7 +85,7 @@ void App::write_img_desc_binding(VCW_Image img, uint32_t dst_set, uint32_t dst_b
 
 void App::clean_up_desc() {
     vkDestroyDescriptorPool(dev, desc_pool, nullptr);
-    for (int i = 0; i < desc_set_layouts.size(); ++i) {
-        vkDestroyDescriptorSetLayout(dev, desc_set_layouts[i], nullptr);
+    for (auto &desc_set_layout: desc_set_layouts) {
+        vkDestroyDescriptorSetLayout(dev, desc_set_layout, nullptr);
     }
 }
